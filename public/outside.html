@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>طلب دخول المكتب</title>
+    <style>
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            /* center horizontally */
+            align-items: flex-start;
+            /* stick to the top */
+            height: 25vh;
+            /* 10% of screen height */
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 100%;
+            object-fit: contain;
+        }
+
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: right;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .waiting {
+            background-color: #fff9c4;
+        }
+
+        .approved {
+            background-color: #c8e6c9;
+        }
+
+        .rejected {
+            background-color: #ffcdd2;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo-container">
+        <img src="logo.png" alt="شعار" class="logo">
+    </div>
+    <div class="card">
+        <h2>طلب دخول المكتب</h2>
+        <input type="text" id="name" placeholder="ادخل اسم الشخص">
+        <input type="text" id="reason" placeholder="ادخل سبب الدخول">
+        <button onclick="addRequest()">إضافة الطلب</button>
+    </div>
+
+    <div class="card">
+        <h3>قائمة الانتظار</h3>
+        <ul id="requestList"></ul>
+    </div>
+
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io("http://127.0.0.1:3000");
+        const requestList = document.getElementById("requestList");
+        let myRequests = [];
+
+        function addRequest() {
+            const name = document.getElementById("name").value.trim();
+            const reason = document.getElementById("reason").value.trim();
+            if (!name || !reason) return alert("يرجى إدخال الاسم والسبب");
+
+            socket.emit('entry-request', { name, reason });
+            document.getElementById("name").value = '';
+            document.getElementById("reason").value = '';
+        }
+
+        socket.on('update-requests', (requests) => {
+            myRequests = requests;
+            render();
+        });
+
+        function render() {
+            requestList.innerHTML = '';
+            myRequests.forEach(req => {
+                const li = document.createElement('li');
+                li.className = req.status;
+                const statusText = {
+                    waiting: "في الانتظار",
+                    approved: "تمت الموافقة",
+                    rejected: "تم الرفض"
+                };
+                li.innerText = `${req.name} - ${req.reason} → ${statusText[req.status]}`;
+                requestList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+
+</html>

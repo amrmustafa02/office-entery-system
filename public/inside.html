@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>الموافقة على الدخول</title>
+    <style>
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            /* center horizontally */
+            align-items: flex-start;
+            /* stick to the top */
+            height: 25vh;
+            /* 10% of screen height */
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 100%;
+            object-fit: contain;
+        }
+
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background: #eef2f3;
+            padding: 20px;
+            text-align: right;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            position: relative;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-approve {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="notifySound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+    <div class="logo-container">
+        <img src="logo.png" alt="شعار" class="logo">
+    </div>
+    
+    <h2>قائمة طلبات الدخول</h2>
+
+
+
+    <ul id="approveList"></ul>
+
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io("http://127.0.0.1:3000");
+        const approveList = document.getElementById("approveList");
+
+        socket.on('update-requests', (requests) => {
+            render(requests);
+        });
+
+        function respond(id, decision) {
+            socket.emit('respond-request', { id, decision });
+        }
+
+        function render(requests) {
+            approveList.innerHTML = '';
+            const statusText = {
+                waiting: "في الانتظار",
+                approved: "تمت الموافقة",
+                rejected: "تم الرفض"
+            };
+
+            requests.forEach(req => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+          <strong>الاسم:</strong> ${req.name}<br>
+          <strong>السبب:</strong> ${req.reason}
+          <span class="status">الحالة: ${statusText[req.status]}</span>
+        `;
+
+                if (req.status === 'waiting') {
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'btn-group';
+
+                    const approveBtn = document.createElement('button');
+                    approveBtn.innerText = 'موافقة';
+                    approveBtn.className = 'btn btn-approve';
+                    approveBtn.onclick = () => respond(req.id, 'approved');
+
+                    const rejectBtn = document.createElement('button');
+                    rejectBtn.innerText = 'رفض';
+                    rejectBtn.className = 'btn btn-reject';
+                    rejectBtn.onclick = () => respond(req.id, 'rejected');
+
+                    btnGroup.appendChild(approveBtn);
+                    btnGroup.appendChild(rejectBtn);
+                    li.appendChild(btnGroup);
+                }
+
+                approveList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+
+</html>
