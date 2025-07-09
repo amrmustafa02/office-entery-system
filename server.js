@@ -51,7 +51,7 @@ setInterval(() => {
     if (req.status === 'waiting') return true;
 
     // إذا تم الرد عليه → احذفه فقط بعد 1 دقيقة
-    return now - req.time < 6000;
+    return now - req.time < 120000;
   });
 
   // إذا حصل تغيير، نرسل التحديث
