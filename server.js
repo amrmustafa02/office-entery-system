@@ -6,60 +6,67 @@ const io = socketIo(server, {
   cors: { origin: "*" }
 });
 
-let requests = [];
-
+let allRequests = [];
 io.on('connection', (socket) => {
-  socket.emit('update-requests', requests);
+  socket.emit('update-leader1-requests', allRequests);
+  socket.emit('update-leader2-requests', allRequests);
 
-  socket.on('entry-request', (data) => {
-    const newRequest = {
-      id: Date.now(),
-      name: data.name,
-      reason: data.reason,
-      status: 'waiting',
-      time: Date.now()
-    };
-    requests.push(newRequest);
-    io.emit('update-requests', requests);
+  socket.on('entry-leader1-request', (data) => {
+    const newRequest = { id: Date.now(), ...data, status: 'waiting', time: Date.now(), leader: 'leader1' };
+    allRequests.push(newRequest);
+    io.emit('update-leader1-requests', allRequests);
   });
 
-  socket.on('respond-request', ({ id, decision }) => {
-    const req = requests.find(r => r.id === id);
+  socket.on('entry-leader2-request', (data) => {
+    const newRequest = { id: Date.now(), ...data, status: 'waiting', time: Date.now(), leader: 'leader2' };
+    allRequests.push(newRequest);
+    io.emit('update-leader2-requests', allRequests);
+  });
+
+  socket.on('respond-leader1-request', ({ id, decision }) => {
+    const req = allRequests.find(r => r.id === id);
     if (req) {
       req.status = decision;
-      io.emit('update-requests', requests);
+      io.emit('update-leader1-requests', allRequests);
     }
-  });
-  socket.on('update-requests', (requests) => {
-    if (requests.length > lastRequestCount) {
-      const audio = document.getElementById("notifySound");
-      if (audio) audio.play();
-    }
-    lastRequestCount = requests.length;
-    render(requests);
   });
 
+  socket.on('respond-leader2-request', ({ id, decision }) => {
+    const req = allRequests.find(r => r.id === id);
+    if (req) {
+      req.status = decision;
+      io.emit('update-leader2-requests', allRequests);
+    }
+  });
+
+  socket.on('delete-leader1-request', (id) => {
+    allRequests = allRequests.filter(req => req.id !== id);
+    io.emit('update-leader1-requests', allRequests);
+  });
+
+  socket.on('delete-leader2-request', (id) => {
+    allRequests = allRequests.filter(req => req.id !== id);
+    io.emit('update-leader2-requests', allRequests);
+  });
 });
 
-// 🧹 حذف الطلبات التي تمت الموافقة أو الرفض عليها بعد مرور دقيقتين
+// Auto-cleanup after 2 minutes
 setInterval(() => {
   const now = Date.now();
-  const before = requests.length;
 
-  requests = requests.filter(req => {
-    // إذا كان الطلب في الانتظار → لا تحذفه
-    if (req.status === 'waiting') return true;
-
-    // إذا تم الرد عليه → احذفه فقط بعد 1 دقيقة
-    return now - req.time < 120000;
+  [allRequests, allRequests].forEach((list, i) => {
+    const originalLength = list.length;
+    const updated = list.filter(req => req.status === 'waiting' || now - req.time < 120000);
+    if (updated.length !== originalLength) {
+      if (i === 0) {
+        allRequests = updated;
+        io.emit('update-leader1-requests', updated);
+      } else {
+        allRequests = updated;
+        io.emit('update-leader2-requests', updated);
+      }
+    }
   });
-
-  // إذا حصل تغيير، نرسل التحديث
-  if (requests.length !== before) {
-    io.emit('update-requests', requests);
-  }
 }, 10000);
 
-
-
-server.listen(3000, () => console.log('Server running on port 3000'));
+server.listen(3000, () => console.log("Server running on port 3000"));

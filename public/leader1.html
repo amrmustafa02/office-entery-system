@@ -3,16 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>الموافقة على الدخول</title>
+    <title>طلبات القائد</title>
     <style>
         .logo-container {
             display: flex;
             justify-content: center;
-            /* center horizontally */
-            align-items: flex-start;
-            /* stick to the top */
+            align-items: center;
             height: 25vh;
-            /* 10% of screen height */
             margin-bottom: 20px;
         }
 
@@ -25,7 +22,7 @@
             font-family: 'Tahoma', sans-serif;
             background: #eef2f3;
             padding: 20px;
-            text-align: right;
+            text-align: center;
         }
 
         h2 {
@@ -43,7 +40,7 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            font-size: 16px;
+            font-size: 24px;
             position: relative;
         }
 
@@ -60,7 +57,7 @@
 
         .btn {
             padding: 8px 16px;
-            font-size: 14px;
+            font-size: 22px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -85,15 +82,13 @@
 
 <body>
 
-    <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+    <audio id="notifySound" src="leader1.mp3" preload="auto"></audio>
 
     <div class="logo-container">
         <img src="logo.png" alt="شعار" class="logo">
     </div>
 
-    <h2>قائمة طلبات الدخول</h2>
-
-
+    <h2>قائمة طلبات القائد</h2>
 
     <ul id="approveList"></ul>
 
@@ -101,13 +96,44 @@
     <script>
         const socket = io("http://127.0.0.1:3000");
         const approveList = document.getElementById("approveList");
+        const notifySound = document.getElementById("notifySound");
 
-        socket.on('update-requests', (requests) => {
+        let previousRequestCount = 0;
+        let lastStatuses = {};
+        let soundAllowed = false;
+
+        // 🟡 Allow sound after first user interaction
+        window.addEventListener('click', () => {
+            soundAllowed = true;
+        }, { once: true });
+
+        socket.on('update-leader1-requests', (requests) => {
+            requests = requests.filter(req => req.leader === 'leader1');
+            let shouldPlaySound = false;
+
+            if (requests.length > previousRequestCount) {
+                console.log('New request added');
+                shouldPlaySound = true; // New request added
+            }
+
+            requests.forEach(req => {
+
+                lastStatuses[req.id] = req.status;
+            });
+
+            previousRequestCount = requests.length;
+
+            if (shouldPlaySound) {
+                notifySound.play().catch((err) => {
+                    console.warn("🔇 Sound play blocked:", err.message);
+                });
+            }
+
             render(requests);
         });
 
         function respond(id, decision) {
-            socket.emit('respond-request', { id, decision });
+            socket.emit('respond-leader1-request', { id, decision });
         }
 
         function render(requests) {
@@ -121,10 +147,10 @@
             requests.forEach(req => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-          <strong>الاسم:</strong> ${req.name}<br>
-          <strong>السبب:</strong> ${req.reason}
-          <span class="status">الحالة: ${statusText[req.status]}</span>
-        `;
+                    <strong>الاسم:</strong> ${req.name}<br>
+                    <strong>السبب:</strong> ${req.reason}
+                    <span class="status">الحالة: ${statusText[req.status]}</span>
+                `;
 
                 if (req.status === 'waiting') {
                     const btnGroup = document.createElement('div');

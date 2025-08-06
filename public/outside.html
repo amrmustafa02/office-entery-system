@@ -2,133 +2,290 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <title>طلب دخول المكتب</title>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+      align-items: center;
+    }
 
-    <title>طلب دخول المكتب</title>
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 25vh;
+      margin-bottom: 20px;
+    }
 
-    <style>
-        .logo-container {
+    .logo {
+      height: 100%;
+      object-fit: contain;
+    }
 
-            display: flex;
-            justify-content: center;
-            /* center horizontally */
-            align-items: flex-start;
-            /* stick to the top */
-            height: 25vh;
-            /* 10% of screen height */
-            margin-bottom: 20px;
-        }
+    input {
+      padding: 10px;
+      margin: 8px 0;
+      width: 50%;
+      align-items: center;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 22px;
+    }
 
-        .logo {
-            height: 100%;
-            object-fit: contain;
-        }
+    button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 51.5%;
+      align-items: center;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 22px;
+    }
 
-        body {
-            font-family: 'Tahoma', sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            text-align: right;
-        }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    li {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-size: 20px;
+      align-items: center;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      touch-action: pan-y;
+      user-select: none;
+      position: relative;
+    }
 
-        input,
-        button {
-            padding: 10px;
-            margin: 5px 0;
-            width: 100%;
-            font-size: 16px;
-        }
+    .waiting {
+      background-color: #fff9c4;
+    }
 
-        ul {
-            list-style: none;
-            padding: 0;
-        }
+    .approved {
+      background-color: #c8e6c9;
+    }
 
-        li {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            font-size: 16px;
-        }
+    .rejected {
+      background-color: #ffcdd2;
+    }
 
-        .waiting {
-            background-color: #fff9c4;
-        }
+    .card {
+      align-items: center;
+      text-align: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
 
-        .approved {
-            background-color: #c8e6c9;
-        }
+    .card2 {
+      align-items: center;
+      text-align: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
 
-        .rejected {
-            background-color: #ffcdd2;
-        }
-
-        .card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-    </style>
+    select.styled-select {
+      appearance: none;
+      align-items: center;
+      text-align: center;
+      background-color: #fff;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='%23444' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position-x: 98%;
+      background-position-y: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 20px;
+      width: 51.5%;
+      border: 1px solid;
+      padding: 8px;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="logo-container">
-        <img src="logo.png" alt="شعار" class="logo">
-    </div>
-    <div class="card">
-        <h2>طلب دخول المكتب</h2>
-        <input type="text" id="name" placeholder="ادخل اسم الشخص">
-        <input type="text" id="reason" placeholder="ادخل سبب الدخول">
-        <button onclick="addRequest()">إضافة الطلب</button>
-    </div>
+  <audio id="statusSound" src="office.mp3" preload="auto"></audio>
 
-    <div class="card">
-        <h3>قائمة الانتظار</h3>
-        <ul id="requestList"></ul>
-    </div>
+  <div class="logo-container">
+    <img src="logo.png" alt="شعار" class="logo" />
+  </div>
 
-    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io("http://127.0.0.1:3000");
-        const requestList = document.getElementById("requestList");
-        let myRequests = [];
+  <div class="card">
+    <h2>طلب دخول المكتب</h2>
 
-        function addRequest() {
-            const name = document.getElementById("name").value.trim();
-            const reason = document.getElementById("reason").value.trim();
-            if (!name || !reason) return alert("يرجى إدخال الاسم والسبب");
+    <input type="text" id="name" placeholder="ادخل اسم الشخص" />
 
-            socket.emit('entry-request', { name, reason });
-            document.getElementById("name").value = '';
-            document.getElementById("reason").value = '';
+    <input type="text" id="reason" placeholder="ادخل سبب الدخول" />
+
+    <select id="leader" class="styled-select" required>
+      <option value="" disabled selected hidden>اختر القائد</option>
+      <option value="leader1">القائد الأول</option>
+      <option value="leader2">القائد الثاني</option>
+    </select>
+
+
+    <button onclick="addRequest()">إضافة الطلب</button>
+
+  </div>
+
+  <div class="card2">
+    <h3>قائمة الانتظار</h3>
+    <ul id="requestList"></ul>
+  </div>
+
+  <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io("http://127.0.0.1:3000");
+    const requestList = document.getElementById("requestList");
+    const statusSound = document.getElementById("statusSound");
+
+    let myRequests = [];
+    let soundAllowed = false;
+
+    window.addEventListener("click", () => {
+      soundAllowed = true;
+    }, { once: true });
+
+    function addRequest() {
+      const name = document.getElementById("name").value.trim();
+      const reason = document.getElementById("reason").value.trim();
+      const leader = document.getElementById("leader").value;
+
+      if (!name || !reason || !leader) {
+        alert("يرجى إدخال الاسم والسبب واختيار القائد");
+        return;
+      }
+
+      socket.emit(`entry-${leader}-request`, { name, reason });
+
+      document.getElementById("name").value = "";
+      document.getElementById("reason").value = "";
+      document.getElementById("leader").value = "";
+    }
+
+
+    socket.on("update-leader1-requests", (requests) => {
+      let statusChanged = false;
+      for (let newReq of requests) {
+        const oldReq = myRequests.find(r => r.id === newReq.id);
+        if (oldReq && oldReq.status !== newReq.status) {
+          statusChanged = true;
+          break;
         }
+      }
+      myRequests = requests;
 
-        socket.on('update-requests', (requests) => {
-            myRequests = requests;
-            render();
-        });
+      if (soundAllowed && statusChanged) {
+        statusSound.play().catch(err => console.warn("🔇 Sound blocked:", err.message));
+      }
 
-        function render() {
-            requestList.innerHTML = '';
-            myRequests.forEach(req => {
-                const li = document.createElement('li');
-                li.className = req.status;
-                const statusText = {
-                    waiting: "في الانتظار",
-                    approved: "تمت الموافقة",
-                    rejected: "تم الرفض"
-                };
-                li.innerText = `${req.name} - ${req.reason} → ${statusText[req.status]}`;
-                requestList.appendChild(li);
-            });
+      render();
+    });
+    socket.on("update-leader2-requests", (requests) => {
+      let statusChanged = false;
+      for (let newReq of requests) {
+        const oldReq = myRequests.find(r => r.id === newReq.id);
+        if (oldReq && oldReq.status !== newReq.status) {
+          statusChanged = true;
+          break;
         }
-    </script>
+      }
+      myRequests = requests;
+
+      if (soundAllowed && statusChanged) {
+        statusSound.play().catch(err => console.warn("🔇 Sound blocked:", err.message));
+      }
+
+      render();
+    });
+
+    function deleteRequest(id, leader) {
+      if (leader === "leader1") {
+        socket.emit("delete-leader1-request", id);
+      } else {
+        socket.emit("delete-leader2-request", id);
+      }
+    }
+
+    function render() {
+      requestList.innerHTML = "";
+
+      myRequests.forEach(req => {
+        const li = document.createElement("li");
+        li.className = req.status;
+
+        const statusText = {
+          waiting: "في الانتظار",
+          approved: "تمت الموافقة",
+          rejected: "تم الرفض"
+        };
+
+        if (req.leader == "leader1") {
+          li.innerText = `الاسم: ${req.name}\nالسبب: ${req.reason}\nالحالة: ${statusText[req.status]}\n مرسل الي: القائد`;
+        } else {
+          li.innerText = `الاسم: ${req.name}\nالسبب: ${req.reason}\nالحالة: ${statusText[req.status]}\n مرسل الي: القائد الثاني`;
+        }
+        <!-- li.innerText = `الاسم: ${req.name}\nالسبب: ${req.reason}\nالحالة: ${statusText[req.status]}\n مرسل الي: `; -->
+
+        requestList.appendChild(li);
+
+        if (req.status === "waiting") {
+          addSwipeToDelete(li, req.id, req.leader);
+        }
+      });
+    }
+
+    function addSwipeToDelete(element, requestId, leader) {
+      let startX = 0;
+      let isDragging = false;
+
+      element.addEventListener("pointerdown", (e) => {
+        startX = e.clientX;
+        isDragging = true;
+        element.setPointerCapture(e.pointerId);
+      });
+
+      element.addEventListener("pointermove", (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        element.style.transform = `translateX(${dx}px)`;
+        element.style.opacity = Math.abs(dx) > 100 ? 0.5 : 1;
+      });
+
+      element.addEventListener("pointerup", (e) => {
+        const dx = e.clientX - startX;
+        element.releasePointerCapture(e.pointerId);
+        isDragging = false;
+
+        if (Math.abs(dx) > 100) {
+          element.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+          element.style.transform = `translateX(${dx > 0 ? '100%' : '-100%'})`;
+          element.style.opacity = 0;
+
+          setTimeout(() => {
+
+            deleteRequest(requestId, leader);
+          }, 300);
+        } else {
+          element.style.transform = "translateX(0)";
+          element.style.opacity = 1;
+        }
+      });
+    }
+  </script>
 </body>
 
 </html>
