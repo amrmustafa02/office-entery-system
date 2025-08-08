@@ -9,7 +9,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 25vh;
+            height: 20vh;
             margin-bottom: 20px;
         }
 
@@ -31,17 +31,23 @@
 
         ul {
             list-style: none;
-            padding: 0;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 40px;
+            justify-items: center;
         }
 
         li {
             background: white;
-            margin-bottom: 15px;
             padding: 15px;
+            margin: 16px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             font-size: 24px;
             position: relative;
+            width: 100%;
+            max-width: 400px;
         }
 
         .status {
@@ -88,7 +94,7 @@
         <img src="logo.png" alt="شعار" class="logo">
     </div>
 
-    <h2>قائمة طلبات القائد</h2>
+    <h2>قائمة الانتظار</h2>
 
     <ul id="approveList"></ul>
 
@@ -102,7 +108,6 @@
         let lastStatuses = {};
         let soundAllowed = false;
 
-        // 🟡 Allow sound after first user interaction
         window.addEventListener('click', () => {
             soundAllowed = true;
         }, { once: true });
@@ -112,18 +117,16 @@
             let shouldPlaySound = false;
 
             if (requests.length > previousRequestCount) {
-                console.log('New request added');
-                shouldPlaySound = true; // New request added
+                shouldPlaySound = true;
             }
 
             requests.forEach(req => {
-
                 lastStatuses[req.id] = req.status;
             });
 
             previousRequestCount = requests.length;
 
-            if (shouldPlaySound) {
+            if (shouldPlaySound && soundAllowed) {
                 notifySound.play().catch((err) => {
                     console.warn("🔇 Sound play blocked:", err.message);
                 });

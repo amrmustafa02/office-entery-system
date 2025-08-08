@@ -48,25 +48,32 @@ io.on('connection', (socket) => {
     allRequests = allRequests.filter(req => req.id !== id);
     io.emit('update-leader2-requests', allRequests);
   });
+  socket.on("delete-non-waiting", (_) => {
+    allRequests = allRequests.filter(req => req.status === 'waiting');
+    io.emit('update-leader1-requests', allRequests);
+    io.emit('update-leader2-requests', allRequests);
+  });
 });
 
 // Auto-cleanup after 2 minutes
-setInterval(() => {
-  const now = Date.now();
+// setInterval(() => {
+//   const now = Date.now();
 
-  [allRequests, allRequests].forEach((list, i) => {
-    const originalLength = list.length;
-    const updated = list.filter(req => req.status === 'waiting' || now - req.time < 120000);
-    if (updated.length !== originalLength) {
-      if (i === 0) {
-        allRequests = updated;
-        io.emit('update-leader1-requests', updated);
-      } else {
-        allRequests = updated;
-        io.emit('update-leader2-requests', updated);
-      }
-    }
-  });
-}, 10000);
+//   [allRequests, allRequests].forEach((list, i) => {
+//     const originalLength = list.length;
+//     const updated = list.filter(req => req.status === 'waiting' || now - req.time < 120000);
+//     if (updated.length !== originalLength) {
+//       if (i === 0) {
+//         allRequests = updated;
+//         io.emit('update-leader1-requests', updated);
+//       } else {
+//         allRequests = updated;
+//         io.emit('update-leader2-requests', updated);
+//       }
+//     }
+//   });
+// }, 10000);
+
+
 
 server.listen(3000, () => console.log("Server running on port 3000"));

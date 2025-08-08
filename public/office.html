@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>طلب دخول المكتب</title>
+  <title>مكتب المتابعة</title>
   <style>
     body {
       font-family: 'Tahoma', sans-serif;
@@ -113,18 +113,91 @@
       border: 1px solid;
       padding: 8px;
     }
+
+    .logo-row {
+      display: flex;
+      margin: 16px;
+      align-items: center;
+      justify-content: center;
+      /* optional: center the entire row horizontally */
+      gap: 16px;
+      /* spacing between logo and text */
+      height: 100px;
+      /* or whatever height you want */
+    }
+
+    .logo {
+      height: 80%;
+      /* adjust as needed */
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 50px;
+      justify-items: center;
+    }
+
+    li {
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 20px;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      touch-action: pan-y;
+      user-select: none;
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      white-space: pre-line;
+    }
+
+    .fab-delete {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 28px;
+      background-color: white;
+      color: white;
+      border: solid 1px black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      transition: background-color 0.3s ease;
+    }
+
+    .fab-delete:hover {
+      background-color: #d32f2f;
+      border: none;
+    }
   </style>
 </head>
 
 <body>
   <audio id="statusSound" src="office.mp3" preload="auto"></audio>
 
-  <div class="logo-container">
+  <div class="logo-row">
     <img src="logo.png" alt="شعار" class="logo" />
+    <span class="logo-text">طلب دخول المكتب</span>
+    <img src="logo.png" alt="شعار" class="logo" />
+
   </div>
 
   <div class="card">
-    <h2>طلب دخول المكتب</h2>
 
     <input type="text" id="name" placeholder="ادخل اسم الشخص" />
 
@@ -285,7 +358,14 @@
         }
       });
     }
+    function deleteNonWaiting() {
+      socket.emit("delete-non-waiting");
+    }
+
+
   </script>
+  <button class="fab-delete" onclick="deleteNonWaiting()" title="حذف الطلبات التي تم الرد عليها">🗑</button>
+
 </body>
 
 </html>
