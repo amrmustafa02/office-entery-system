@@ -29,7 +29,6 @@
       margin-bottom: 20px;
     }
 
-
     ul {
       list-style: none;
       padding: 8px;
@@ -50,7 +49,6 @@
       width: 100%;
       max-width: 400px;
     }
-
 
     .status {
       font-weight: bold;
@@ -85,6 +83,27 @@
     .btn:hover {
       opacity: 0.9;
     }
+
+    .fab-sound {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 26px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      transition: background-color 0.3s ease;
+    }
+
+    .fab-sound:hover {
+      background-color: #1976D2;
+    }
   </style>
 </head>
 
@@ -100,18 +119,30 @@
 
   <ul id="approveList"></ul>
 
+  <!-- 🔔 Floating Button to Toggle Sound -->
+  <button id="toggleSoundBtn" class="fab-sound" onclick="toggleSound()" title="صوت التنبيه مفعل">🔔</button>
+
   <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
   <script>
     const socket = io("http://127.0.0.1:3000");
     const approveList = document.getElementById("approveList");
     const notifySound = document.getElementById("notifySound");
+    const toggleSoundBtn = document.getElementById("toggleSoundBtn");
 
     let previousRequestCount = 0;
-    let soundAllowed = false;
+    let soundAllowed = true; // default: sound ON
 
-    window.addEventListener("click", () => {
-      soundAllowed = true;
-    }, { once: true });
+    function toggleSound() {
+      soundAllowed = !soundAllowed;
+
+      if (soundAllowed) {
+        toggleSoundBtn.innerText = "🔔";
+        toggleSoundBtn.title = "صوت التنبيه مفعل";
+      } else {
+        toggleSoundBtn.innerText = "🔕";
+        toggleSoundBtn.title = "صوت التنبيه متوقف";
+      }
+    }
 
     socket.on("update-leader2-requests", (requests) => {
       requests = requests.filter(req => req.leader === 'leader2');
